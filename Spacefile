@@ -5,5 +5,7 @@ micros:
     src: ./
     engine: python3.9
     primary: true
-    run: gunicorn main:app
     public: true
+    dev: .venv/bin/flask --app main run
+    run: gunicorn main:app
+    
