@@ -6,13 +6,32 @@ import os
 from google.analytics.data_v1beta import BetaAnalyticsDataClient
 from google.analytics.data_v1beta.types import RunReportRequest
 from google.oauth2 import service_account
+from logging.config import dictConfig
+
+dictConfig({
+    'version': 1,
+    'formatters': {'default': {
+        'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
+    }},
+    'handlers': {'wsgi': {
+        'class': 'logging.StreamHandler',
+        'stream': 'ext://flask.logging.wsgi_errors_stream',
+        'formatter': 'default'
+    }},
+    'root': {
+        'level': 'INFO',
+        'handlers': ['wsgi']
+    }
+})
+
+# logging.basicConfig(level=logging.INFO, handlers=[logging.StreamHandler(sys.stdout)])
+# logger = logging.getLogger(__name__)
 
 # Flask app
 app = Flask(__name__)  
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, handlers=[logging.StreamHandler(sys.stdout)])
-logger = logging.getLogger(__name__)
+
 logs = []
 
 credentials = service_account.Credentials.from_service_account_file(
