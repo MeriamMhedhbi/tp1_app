@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Trends Data Visualization</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h2>Google Trends Comparison</h2>
+    <canvas id="trendsChart" width="800" height="400"></canvas>
+    <script>
+        let data = JSON.parse('{{ data_json|safe }}');
+        if (Object.keys(data).length) {
+            let ctx = document.getElementById('trendsChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.dates,
+                    datasets: Object.keys(data.values).map(keyword => ({
+                        label: keyword,
+                        data: data.values[keyword],
+                        fill: false
+                    }))
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            beginAtZero: true
+                        },
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
