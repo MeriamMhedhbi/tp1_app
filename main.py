@@ -1,3 +1,4 @@
+import json
 from flask import Flask, request, render_template
 import sys
 import logging
@@ -6,13 +7,34 @@ import os
 from google.analytics.data_v1beta import BetaAnalyticsDataClient
 from google.analytics.data_v1beta.types import RunReportRequest
 from google.oauth2 import service_account
+from logging.config import dictConfig
+from pytrends.request import TrendReq
+
+dictConfig({
+    'version': 1,
+    'formatters': {'default': {
+        'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
+    }},
+    'handlers': {'wsgi': {
+        'class': 'logging.StreamHandler',
+        'stream': 'ext://flask.logging.wsgi_errors_stream',
+        'formatter': 'default'
+    }},
+    'root': {
+        'level': 'INFO',
+        'handlers': ['wsgi']
+    }
+})
+
+
+# logging.basicConfig(level=logging.INFO, handlers=[logging.StreamHandler(sys.stdout)])
+# logger = logging.getLogger(__name__)
 
 # Flask app
 app = Flask(__name__)  
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, handlers=[logging.StreamHandler(sys.stdout)])
-logger = logging.getLogger(__name__)
+
 logs = []
 
 credentials = service_account.Credentials.from_service_account_file(
@@ -35,6 +57,36 @@ def hello_world():
     """
     # Return the tag and a print "Hello world"
     return prefix_google + "Hello World !!"
+
+@app.route("/google-trends", methods=['GET'])
+def google_trends():
+      # Create a pytrends client
+    pytrends = TrendReq(hl='en-US', tz=360, geo='FR')
+    
+     # Define your keywords and timeframe
+
+    keywords = ['Lupin', 'Anime']
+
+    timeframe='today 3-m' 
+    
+    # Get Google Trends data
+
+    pytrends.build_payload(keywords, timeframe=timeframe)
+
+    interest_over_time_df = pytrends.interest_over_time()
+
+
+    #chart_data = interest_over_time_df.to_json(orient='split')
+    data = {
+            'dates': list(interest_over_time_df.index.strftime('%Y-%m-%d')),
+            'values': {keyword: list(interest_over_time_df[keyword]) for keyword in keywords}
+        }
+    #print("data=",data)
+    data_json = json.dumps(data)
+    
+    return render_template('chart.html', data_json=data_json)
+    
+ 
 
 # Route to logger page
 @app.route("/logger", methods=['GET', 'POST'])
